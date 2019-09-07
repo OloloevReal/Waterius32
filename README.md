@@ -18,6 +18,23 @@ __        ___  _____ _____ ____  ___ _   _ ____       _________
 
 ### Архитектура
 - [Кнопка управления](BUTTON.md)
+- Используемые GPIO:
+```
+  GPIO-25 - Setup button
+
+  GPIO-32 - analog counter_0 (Namur), using internal PullUp
+  GPIO-33 - analog counter_1 (Namur), using internal PullUp
+
+  GPIO-02 - BUILD IN LED
+  GPIO-05 - HIGH level activate additional power supply for WiFi/BT purpose
+  GPIO-27 - Measuring Input voltage, after LDO
+
+  GPIO-04 - the sourse of reference voltage for sensors
+  GPIO-34 - Water Sensor 0
+  GPIO-35 - Water Sensor 1
+  GPIO-36 - Water Sensor 2
+  GPIO-39 - Water Sensor 3
+```
 
 ### Проблемы
 - Как оказалось, при детальном погружении в тему, не понятно чем питать ESP32. Рекомендации разработчиков 3.3в минимум 500мА источник. Широко распространенные LDO способные отдать такой ток имеют высокое потребление по сравнению с потреблением всей схемы в режиме покоя. В интернетах народ не парится, а использует прямое подключение к элементам питания LiFePo4, так себе решение.
