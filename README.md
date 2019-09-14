@@ -33,6 +33,10 @@ __        ___  _____ _____ ____  ___ _   _ ____       _________
   GPIO-35 - Water Sensor 1
   GPIO-36 - Water Sensor 2
   GPIO-39 - Water Sensor 3
+  
+  GPIO-16 - RX NB-IOT
+  GPIO-17 - TX NB-IOT
+  GPIO-18 - EN NB-IOT
 ```
 - [Кнопка управления](BUTTON.md)
 
