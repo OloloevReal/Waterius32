@@ -381,12 +381,14 @@ void setup()
                 LOG_NOTICE("BLK", "send ok");
             }
 #endif
-
-#ifdef SEND_COAP
-
-#endif
-
         }
+        disconnect_wl();
+#ifdef SEND_COAP
+        if (send_coap(sett, data, cdata))
+        {
+            LOG_NOTICE("CAP", "send coap ok");
+        }else LOG_ERROR("CAP", "Send coap data failed");
+#endif
 #ifdef USE_EXT_VCC
         LOG_NOTICE("ESP", "Disable additional power supply");
         vcc.extVCCOff();

@@ -12,6 +12,7 @@ void resetSettings();
 */
 void setup_ap(Settings &sett, const SlaveData &data, const CalculatedData &cdata);
 void connect_wl();
+void disconnect_wl();
 wl_status_t status_wl();
 String formatCheckbox(const char* name, const char* text, const char* value, const bool checked);
 void stop_ap();

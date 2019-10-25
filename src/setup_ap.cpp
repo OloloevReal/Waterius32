@@ -122,6 +122,11 @@ void connect_wl(){
     };
 }
 
+void disconnect_wl(){
+    LOG_NOTICE("WIF", "Disconnecting Wifi");
+    WiFi.disconnect();
+}
+
 wl_status_t status_wl(){
     return WiFi.status();
 }
