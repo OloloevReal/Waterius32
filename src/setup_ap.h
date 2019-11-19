@@ -101,11 +101,11 @@ struct WiFiCustomParameter{
     IntParameter *wake_every_min;
     WiFiManagerParameter *param_sn0;
     WiFiManagerParameter *param_sn1;
+    WiFiManagerParameter *param_coap_hostname;
 
     Settings *sett_wifi;
     SlaveData data_wifi;
-    float channel0_wifi;
-    float channel1_wifi;
+    CalculatedData cdata_wifi;
 };
 
 String getParam(String name);

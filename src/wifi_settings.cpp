@@ -16,14 +16,7 @@ bool clearConfig(const Settings &sett){
 
     //To prevent reading CRC = 0
     EEPROM.write(0, 255);
-    if (EEPROM.commit())
-    {
-       return true;
-    }
-    else
-    {
-        return false;
-    }
+    return EEPROM.commit();
 }
 
 /* Сохраняем конфигурацию в EEPROM */
@@ -70,12 +63,13 @@ bool loadConfig(struct Settings &sett)
         sett.sn0[SN_LEN-1] = '\0';
         sett.sn1[SN_LEN-1] = '\0';
         sett.description[EMAIL_TITLE_LEN - 1] = '\0';
+        sett.coap_hostname[HOSTNAME_LEN-1] = '\0';
        
         LOG_NOTICE( "CFG", "email=" << sett.email  << ", hostname=" << sett.hostname);
         LOG_NOTICE( "CFG", "hostname_json=" << sett.hostname_json);
+        LOG_NOTICE( "CFG", "coap_hostname=" << sett.coap_hostname);
         LOG_NOTICE( "CFG", "json_tag=" << sett.name);
 
-        // Всегда одно и тоже будет
         LOG_NOTICE( "CFG", "channel0_start=" << sett.channel0_start << ", impulses0_start=" << sett.impulses0_start << ", factor=" << sett.liters_per_impuls );
         LOG_NOTICE( "CFG", "channel1_start=" << sett.channel1_start << ", impulses1_start=" << sett.impulses1_start);
         LOG_NOTICE( "CFG", "sensors=" << sett.sensors);
@@ -103,6 +97,8 @@ bool loadConfig(struct Settings &sett)
 
         String hostname_json = "https://kopilka.us.to:4400/waterius/";
         strncpy0(sett.hostname_json, hostname_json.c_str(), EMAIL_TITLE_LEN);
+
+        strncpy0(sett.coap_hostname, "coap://kopilka.us.to:5683", HOSTNAME_LEN);
 
         String name = "Waterius_";
         strncpy0(sett.name, name.c_str(), HOSTNAME_LEN);

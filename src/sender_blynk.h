@@ -1,11 +1,11 @@
 #ifndef _SENDERBLYNK_h
 #define _SENDERBLYNK_h
 
+#if defined(WIFI) && defined(SEND_BLYNK)
 #include <WiFi.h>
 #include <BlynkSimpleEsp32_SSL.h>
 #include "Logging.h"
 
-#ifdef SEND_BLYNK
 bool send_blynk(const Settings &sett, const SlaveData &data, const CalculatedData &cdata)
 {
     Blynk.config(sett.key, sett.hostname, BLYNK_DEFAULT_PORT_SSL);

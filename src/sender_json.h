@@ -1,14 +1,12 @@
 #ifndef _SENDERJSON_h
 #define _SENDERJSON_h
 
+#if defined(WIFI) && defined(SEND_JSON)
+
 #include "Logging.h"
 #include <ArduinoJson.h>
-//#include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
-
-
-#ifdef SEND_JSON
 
 WiFiClientSecure client;
 HTTPClient http;

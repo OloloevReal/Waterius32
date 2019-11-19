@@ -8,6 +8,7 @@
 #include "setup_ap.h"
 #include "sender_json.h"
 #include "sender_blynk.h"
+#include "sender_blynk_nbiot.h"
 #include "sender_coap.h"
 #include "vcc.h"
 
@@ -345,6 +346,8 @@ void setup()
         LOG_NOTICE("ESP", "impulses0_previous:" << sett.impulses0_previous);
         LOG_NOTICE("ESP", "impulses1_start:" << sett.impulses1_start);
         LOG_NOTICE("ESP", "impulses1_previous:" << sett.impulses1_previous);
+        LOG_NOTICE("ESP", "channel0:" << cdata.channel0 << "\t" << cdata.delta0);
+        LOG_NOTICE("ESP", "channel1:" << cdata.channel1 << "\t" << cdata.delta1);
         LOG_NOTICE("ESP", "sensors:" << sett.sensors);
 
 #ifdef USE_EXT_VCC
@@ -356,7 +359,7 @@ void setup()
         LOG_NOTICE("PWR", "Power (mV): " << vcc.readVCC());
         //delay(100);
         ledBuiltIn.LEDTurnOff();
-
+#if defined(WIFI) && (defined(SEND_JSON) || defined(SEND_BLYNK) || defined(SEND_COAP))
         connect_wl();
         if (status_wl() == WL_CONNECTED)
         {
@@ -381,13 +384,31 @@ void setup()
                 LOG_NOTICE("BLK", "send ok");
             }
 #endif
+
+#ifdef SEND_COAP
+            if (send_coap(sett, data, cdata))
+            {
+                LOG_NOTICE("CAP", "send CoAP ok");
+            }else LOG_ERROR("CAP", "Send CoAP data failed");
+#endif
         }
         disconnect_wl();
-#ifdef SEND_COAP
+#endif
+#if defined(NBIOT) 
+        data.voltage = vcc.readVCC();
+        LOG_NOTICE("PWR", "Power (mV): " << vcc.readVCC());
+#if defined(SEND_COAP)  
         if (send_coap(sett, data, cdata))
         {
             LOG_NOTICE("CAP", "send coap ok");
         }else LOG_ERROR("CAP", "Send coap data failed");
+#endif
+#if defined(SEND_BLYNK)
+        if (strlen(sett.key) > 2 && send_blynk(sett, data, cdata))
+        {
+            LOG_NOTICE("BLK", "send ok");
+        }
+#endif
 #endif
 #ifdef USE_EXT_VCC
         LOG_NOTICE("ESP", "Disable additional power supply");
@@ -417,6 +438,7 @@ void setup()
         ledBuiltIn.LEDTurnOn(); //FIXME: led doesn't work if used btnHandlerDown
 
         loadConfig(sett);
+        calculate_values(sett, &data, &cdata);
 
         btnTimeStart = 0; //clear start attachInterruptTime
         btnInterrupt = false;

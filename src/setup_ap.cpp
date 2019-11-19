@@ -53,8 +53,7 @@ void initParameter(Settings &sett, const SlaveData &data, const CalculatedData &
 {
     wcp.sett_wifi = &sett;
     wcp.data_wifi = data;
-    wcp.channel0_wifi = cdata.channel0;
-    wcp.channel1_wifi = cdata.channel1;
+    wcp.cdata_wifi = cdata;
     
     wcp.param_key = new WiFiManagerParameter( "key", "Ключ:",  sett.key, KEY_LEN-1);
     wcp.param_hostname = new WiFiManagerParameter( "host", "Адрес сервера:",  sett.hostname, HOSTNAME_LEN-1);
@@ -70,6 +69,7 @@ void initParameter(Settings &sett, const SlaveData &data, const CalculatedData &
     wcp.param_sn1 = new WiFiManagerParameter( "sn1", "Серийный номер:",  sett.sn1, SN_LEN-1);
     wcp.param_litres_per_imp = new LongParameter( "factor", "Литров на импульс:",  sett.liters_per_impuls);
     wcp.wake_every_min = new IntParameter( "wake_every_min", "Период отправки, мин:",  sett.wake_every_min);
+    wcp.param_coap_hostname = new WiFiManagerParameter( "coap", "COAP сервер:",  sett.coap_hostname, HOSTNAME_LEN-1);
 
     LOG_NOTICE( "ESP", "Init Key:" << sett.key  << " " << wcp.param_key->getValue());
     LOG_NOTICE( "ESP", "Init host:" << sett.hostname << " " << wcp.param_hostname->getValue());
@@ -82,6 +82,7 @@ void initParameter(Settings &sett, const SlaveData &data, const CalculatedData &
     LOG_NOTICE( "ESP", "Init channel0:" << cdata.channel0 << " " << wcp.param_channel0_start->getValue());
     LOG_NOTICE( "ESP", "Init channel1:" << cdata.channel1 << " " << wcp.param_channel1_start->getValue());
     LOG_NOTICE( "ESP", "Init factor:" << sett.liters_per_impuls << " " << wcp.param_litres_per_imp->getValue());
+    LOG_NOTICE( "ESP", "Init coap_hostname:" << sett.coap_hostname << " " << wcp.param_coap_hostname->getValue());
 }
 
 void handleRoute(){
@@ -125,6 +126,7 @@ void connect_wl(){
 void disconnect_wl(){
     LOG_NOTICE("WIF", "Disconnecting Wifi");
     WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
 }
 
 wl_status_t status_wl(){
@@ -176,6 +178,12 @@ void setup_ap(Settings &sett, const SlaveData &data, const CalculatedData &cdata
     WiFiManagerParameter json_text("<p>JSON:</p>");
     wm.addParameter( &json_text );
     wm.addParameter( wcp.param_hostname_json );
+#endif
+
+#ifdef SEND_COAP
+    // WiFiManagerParameter coap_hostname("<p>COAP сервер:</p>");
+    // wm.addParameter( &coap_hostname );
+    wm.addParameter( wcp.param_coap_hostname );
 #endif
 
 #ifdef WS_ENABLED
@@ -265,6 +273,8 @@ void saveParamCallback()
 
     wcp.sett_wifi->wake_every_min = wcp.wake_every_min->getValue();
     LOG_NOTICE( "AP", "wake_every_min=" << wcp.sett_wifi->wake_every_min );
+
+    strncpy0(wcp.sett_wifi->coap_hostname, wcp.param_coap_hostname->getValue(), HOSTNAME_LEN);
 
 #ifdef WS_ENABLED
     uint8_t sensors = 0;

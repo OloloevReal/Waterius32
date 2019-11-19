@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define FIRMWARE_VERSION "0.1.14"
+#define FIRMWARE_VERSION "0.1.17"
 
 #define LED 2
 
@@ -60,6 +60,9 @@ Doesn't change RTC_MEM_* adresses - asm macros uses address shifts
 */
 #define SERVER_TIMEOUT 5000UL // ms
 
+//#define WIFI
+#define NBIOT
+
 /*
     Включить отправку данных в приложение Blynk.cc
 */
@@ -68,12 +71,13 @@ Doesn't change RTC_MEM_* adresses - asm macros uses address shifts
 /*
     Включить отправку данных на HTTP сервер
 */
-#define SEND_JSON
+//#define SEND_JSON
 
 /*
     Включить отправку данных на сервер по COAP
 */
 #define SEND_COAP
+
 
 /*
     При первом включении заполним 10 литров на импульс
@@ -201,6 +205,9 @@ struct Settings
     char sn1[SN_LEN];
 
     uint8_t sensors;
+
+    char coap_hostname[HOSTNAME_LEN];
+
     /*
     Контрольная сумма, чтобы гарантировать корректность чтения настроек
     */
