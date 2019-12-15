@@ -21,7 +21,9 @@ __        ___  _____ _____ ____  ___ _   _ ____       _________
 
 - [Изготовление](Making.md)
 
-![](Board/device_v1_1.JPG "Waterius32")
+![](Board/device_v1_4.JPG "Waterius32")
+![](Board/device_v1_5.JPG "Waterius32")
+![](Board/device_v1_3.JPG "Waterius32")
 ![](Board/device_v1_2.JPG "Waterius32")
 
 ### Архитектура
