@@ -52,6 +52,7 @@ struct Vcc {
         gpio_pullup_dis(this->_devider_pin);
         gpio_pulldown_dis(this->_devider_pin);
         gpio_set_level(this->_devider_pin, HIGH);
+        delay(500);
     }
 
     void extDeviderOff(){

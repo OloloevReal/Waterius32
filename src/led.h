@@ -3,8 +3,9 @@
 
 #include <Arduino.h>
 
-#define LEDBlinkOff     250
-#define LEDBlinkOn      250
+#define LEDBlinkOff     200
+#define LEDBlinkOn      200
+
 
 struct Led
 {    

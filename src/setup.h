@@ -3,18 +3,18 @@
 
 #include <Arduino.h>
 
-#define FIRMWARE_VERSION "0.1.17"
+#define FIRMWARE_VERSION "0.1.18"
 
 #define LED 2
 
-#define BTN_SHORT_PRESS 1000
-#define BTN_LONG_PRESS 5000
+#define BTN_SHORT_PRESS     1000
+#define BTN_LONG_PRESS      5000
 #define BTN_VERY_LONG_PRESS 15000
-#define BTN_MAX_PRESS 20000 //TODO: add cheking for max press
+#define BTN_MAX_PRESS       20000 //TODO: add cheking for max press
 
-#define LIMIT_CLOSED 230       // 3v3, pullup 40k, 3.6 kOm
-#define LIMIT_NAMUR_CLOSED 360 // 3v3, pullup 40k, 5.2 kOm
-#define LIMIT_NAMUR_OPEN 800   // 3v3, pullup 40k, 9.2 kOm
+#define LIMIT_CLOSED        230 // 3v3, pullup 40k, 3.6 kOm
+#define LIMIT_NAMUR_CLOSED  360 // 3v3, pullup 40k, 5.2 kOm
+#define LIMIT_NAMUR_OPEN    800 // 3v3, pullup 40k, 9.2 kOm
 
 /*
 !!! Keep out !!! 
@@ -36,11 +36,12 @@ Doesn't change RTC_MEM_* adresses - asm macros uses address shifts
 #define RTC_MEM_WS_3_RAW            0x70C
 //#define RTC_MEM_ADC_DIS             0x70A
 #define RTC_MEM_FLAG                0x7FD
+#define RTC_MEM_FLAG_CP             0x7FE
 #define RTC_MEM_BTN                 0x7FF
 #define RTC_MEM_BUFFER_TOP          0x800
 
 #define TRIES1 2            // Сколько раз проверяем вход, пока не вернем замыкание LOW->HIGH
-#define TRIES2 3            // Повтор проверок смены уровня HIGH -> LOW
+#define TRIES2 4            // Повтор проверок смены уровня HIGH -> LOW
 
 #define WS_ENABLED          // Enable water sensors
 //#define NB_IOT            // Enable NB-IOT instead of WiFi
@@ -60,8 +61,8 @@ Doesn't change RTC_MEM_* adresses - asm macros uses address shifts
 */
 #define SERVER_TIMEOUT 5000UL // ms
 
-//#define WIFI
-#define NBIOT
+#define WIFI
+//#define NBIOT
 
 /*
     Включить отправку данных в приложение Blynk.cc

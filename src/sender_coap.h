@@ -6,6 +6,19 @@ const char hash[]  PROGMEM = "ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527
 const char S_IOT[] PROGMEM = "IOT";
 const char S_CAP[] PROGMEM = "CAP";
 const char S_JSN[] PROGMEM = "JSN";
+
+ #ifdef __cplusplus
+  extern "C" {
+ #endif
+ 
+  uint8_t temprature_sens_read();
+ 
+#ifdef __cplusplus
+}
+#endif
+ 
+uint8_t temprature_sens_read();
+
 #if defined(WIFI)
 #include "Logging.h"
 #include <ArduinoJson.h>
@@ -69,33 +82,34 @@ bool send_coap(const Settings &sett, const SlaveData &data, const CalculatedData
         StaticJsonBuffer<1000> jsonBuffer;            
         JsonObject& root = jsonBuffer.createObject();
         root["id"] = getChipId();
-        //root["key"] = sett.key;
-        root["tag"] = sett.name;
-        //root["description"] = sett.description;
-        //root["version"] = data.version;
-        root["version_esp"] = FIRMWARE_VERSION;
-        //root["boot"] = data.service;  // 2 - reset pin, 3 - power
-        root["resets"] = data.resets;
-        root["voltage"] = (float)(data.voltage / 1000.0);
-        //root["good"] = data.diagnostic;
-        root["ch0"] = cdata.channel0;
-        root["ch1"] = cdata.channel1;
-        root["delta0"] = cdata.delta0;
-        root["delta1"] = cdata.delta1;
-        root["rssi"] = WiFi.RSSI();
+        root["ky"] = sett.key;
+        root["tg"] = sett.name;
+        root["dp"] = sett.description;
+        root["vs"] = data.version;
+        root["ve"] = FIRMWARE_VERSION;
+        root["bt"] = data.service;  // 2 - reset pin, 3 - power
+        root["rs"] = data.resets;
+        root["vt"] = (float)(data.voltage / 1000.0);
+        root["gd"] = data.diagnostic;
+        root["c0"] = cdata.channel0;
+        root["c1"] = cdata.channel1;
+        root["d0"] = cdata.delta0;
+        root["d1"] = cdata.delta1;
+        root["ri"] = WiFi.RSSI();
 
-        root["timer"] = data.WAKE_EVERY_MIN;
-        //root["memoryFree"] = data.memoryFree;
-        //root["waterSensor"] = data.waterSensor;
+        root["tr"] = data.WAKE_EVERY_MIN;
+        root["mf"] = data.memoryFree;
+        root["ws"] = data.waterSensor;
 
         //root["ESPResetReason"] = ESP.getResetReason();
-        root["ESPFreeHeap"] = ESP.getFreeHeap();
-        root["sn0"] = sett.sn0;
-        root["sn1"] = sett.sn1;
+        root["mf"] = ESP.getFreeHeap();
+        root["s0"] = sett.sn0;
+        root["s1"] = sett.sn1;
+        root["tp"] = (temprature_sens_read() - 32) / 1.8;
             
         String output;
         root.printTo(output);
-        LOG_DEBUG("CAP", output);
+        LOG_DEBUG(FPSTR(S_JSN), output);
 
         CoapPacket cp;
         CoapMessage.post(host.c_str(), port.toInt(), cp, "data", (char*)output.c_str(), output.length(), COAP_CONTENT_TYPE::COAP_APPLICATION_JSON);
@@ -104,7 +118,9 @@ bool send_coap(const Settings &sett, const SlaveData &data, const CalculatedData
         sprintf(numstr, "id=%d", getChipId());
         cp.SetQueryString(numstr);
         
-        cp.SetQueryString(FPSTR(hash));
+        char query[100];
+        sprintf(query, "hash=%s", (PGM_P)FPSTR(hash));
+        cp.SetQueryString(query);
         if(udp_send(host.c_str(), port.toInt(), cp)>0){
             LOG_DEBUG("CAP", F("Send COAP message success, message id: ") << cp.messageid);
         }else{
@@ -216,29 +232,30 @@ bool send_coap(const Settings &sett, const SlaveData &data, const CalculatedData
             StaticJsonBuffer<1000> jsonBuffer;            
             JsonObject& root = jsonBuffer.createObject();
             root["id"] = getChipId();
-            root["key"] = sett.key;
-            root["tag"] = sett.name;
-            root["description"] = sett.description;
-            root["version"] = data.version;
-            root["version_esp"] = FIRMWARE_VERSION;
-            root["boot"] = data.service;  // 2 - reset pin, 3 - power
-            root["resets"] = data.resets;
-            root["voltage"] = (float)(data.voltage / 1000.0);
-            root["good"] = data.diagnostic;
-            root["ch0"] = cdata.channel0;
-            root["ch1"] = cdata.channel1;
-            root["delta0"] = cdata.delta0;
-            root["delta1"] = cdata.delta1;
-            root["rssi"] = modem.getSignalQuality(); //WiFi.RSSI();
+            root["ky"] = sett.key;
+            root["tg"] = sett.name;
+            root["dp"] = sett.description;
+            root["vs"] = data.version;
+            root["ve"] = FIRMWARE_VERSION;
+            root["bt"] = data.service;  // 2 - reset pin, 3 - power
+            root["rs"] = data.resets;
+            root["vt"] = (float)(data.voltage / 1000.0);
+            root["gd"] = data.diagnostic;
+            root["c0"] = cdata.channel0;
+            root["c1"] = cdata.channel1;
+            root["d0"] = cdata.delta0;
+            root["d1"] = cdata.delta1;
+            root["ri"] = modem.getSignalQuality(); //WiFi.RSSI();
 
-            root["timer"] = data.WAKE_EVERY_MIN;
-            root["memoryFree"] = data.memoryFree;
-            root["waterSensor"] = data.waterSensor;
+            root["tr"] = data.WAKE_EVERY_MIN;
+            root["mf"] = data.memoryFree;
+            root["ws"] = data.waterSensor;
 
             //root["ESPResetReason"] = ESP.getResetReason();
-            root["ESPFreeHeap"] = ESP.getFreeHeap();
-            root["sn0"] = sett.sn0;
-            root["sn1"] = sett.sn1;
+            root["mf"] = ESP.getFreeHeap();
+            root["s0"] = sett.sn0;
+            root["s1"] = sett.sn1;
+            root["tp"] = (temprature_sens_read() - 32) / 1.8;
                 
             String output;
             root.printTo(output);

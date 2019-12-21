@@ -213,6 +213,29 @@ void calculate_values(Settings &sett, SlaveData *data, CalculatedData *cdata)
     }
 }
 
+void initWS(){
+    RTC_SLOW_MEM[RTC_MEM_WS_0_RAW] = 0xFFFF;
+    RTC_SLOW_MEM[RTC_MEM_WS_1_RAW] = 0xFFFF;
+    RTC_SLOW_MEM[RTC_MEM_WS_2_RAW] = 0xFFFF;
+    RTC_SLOW_MEM[RTC_MEM_WS_3_RAW] = 0xFFFF;
+
+    rtc_gpio_init(GPIO_NUM_4);
+    rtc_gpio_set_direction(GPIO_NUM_4, RTC_GPIO_MODE_INPUT_OUTPUT);
+    //rtc_gpio_set_level(GPIO_NUM_4, HIGH);
+
+    rtc_gpio_init(GPIO_NUM_34);
+    rtc_gpio_set_direction(GPIO_NUM_34, RTC_GPIO_MODE_INPUT_ONLY);
+
+    rtc_gpio_init(GPIO_NUM_35);
+    rtc_gpio_set_direction(GPIO_NUM_35, RTC_GPIO_MODE_INPUT_ONLY);
+
+    rtc_gpio_init(GPIO_NUM_36);
+    rtc_gpio_set_direction(GPIO_NUM_36, RTC_GPIO_MODE_INPUT_ONLY);
+
+    rtc_gpio_init(GPIO_NUM_39);
+    rtc_gpio_set_direction(GPIO_NUM_39, RTC_GPIO_MODE_INPUT_ONLY);
+}
+
 void setup()
 {
     LOG_BEGIN(115200);
@@ -241,12 +264,16 @@ void setup()
         LOG_NOTICE("ESP", "Init, first run");
         for (int i = RTC_MEM_PROG_START; i < RTC_MEM_BUFFER_TOP; ++i)
             RTC_SLOW_MEM[i] = 0x0000;
+   
+        initWS();
+
         Counter_0.init();
         Counter_1.init();
         restore_data(&data);
         data.resets++;
         LOG_DEBUG("ESP", F("Resets=") << data.resets);
         ulp_init(&btnSetup, &Counter_0, &Counter_1);
+        delay(1000);
     }
     else
     {
@@ -257,6 +284,8 @@ void setup()
     Serial.println(RTC_SLOW_MEM[RTC_MEM_BTN] & 0xFFFF, BIN);
     LOG_DEBUG("ESP", "RTC_MEM_FLAG: ");
     Serial.println(RTC_SLOW_MEM[RTC_MEM_FLAG] & 0xFFFF, BIN);
+    LOG_DEBUG("ESP", "RTC_MEM_FLAG_CP: ");
+    Serial.println(RTC_SLOW_MEM[RTC_MEM_FLAG_CP] & 0xFFFF, BIN);
 
     LOG_NOTICE("ULP", "CNT-0:" << (RTC_SLOW_MEM[RTC_MEM_ADC_CH0_RAW] & 0xFFFF) << "\tCount_0: " << (RTC_SLOW_MEM[RTC_MEM_ADC_CH0] & 0xFFFF));
     LOG_NOTICE("ULP", "CNT-1:" << (RTC_SLOW_MEM[RTC_MEM_ADC_CH1_RAW] & 0xFFFF) << "\tCount_1: " << (RTC_SLOW_MEM[RTC_MEM_ADC_CH1] & 0xFFFF));
@@ -356,60 +385,65 @@ void setup()
         vcc.extVCCOn();
 #endif
         data.voltage = vcc.readVCC();
-        LOG_NOTICE("PWR", "Power (mV): " << vcc.readVCC());
-        //delay(100);
-        ledBuiltIn.LEDTurnOff();
+        LOG_NOTICE("PWR", "Power (mV): " << data.voltage);
+        if (data.voltage >= 1880){ //1500 for 18650, 1880 for 4xAA
+            //delay(100);
+            ledBuiltIn.LEDTurnOff();
 #if defined(WIFI) && (defined(SEND_JSON) || defined(SEND_BLYNK) || defined(SEND_COAP))
-        connect_wl();
-        if (status_wl() == WL_CONNECTED)
-        {
-            LOG_NOTICE("WIF", "Connected, got IP address: " << WiFi.localIP().toString());
+            connect_wl();
+            if (status_wl() == WL_CONNECTED)
+            {
+                LOG_NOTICE("WIF", "Connected, got IP address: " << WiFi.localIP().toString());
 
 #ifdef SEND_JSON
-            if (send_json(sett, data, cdata))
-            {
-                LOG_NOTICE("JSN", "send ok");
-                // if (IsSetTimer and WakeUpTimer > 0){
-                //     LOG_NOTICE("JSN", "Need to set a new timer");
-                //     sett.wake_every_min = WakeUpTimer;
-                //     LOG_NOTICE("ESP", "Send to Attiny a new timer=" << sett.wake_every_min);
-                //     masterI2C.sendTimer(sett.wake_every_min);
-                // }
-            }
+                if (send_json(sett, data, cdata))
+                {
+                    LOG_NOTICE("JSN", "send ok");
+                    // if (IsSetTimer and WakeUpTimer > 0){
+                    //     LOG_NOTICE("JSN", "Need to set a new timer");
+                    //     sett.wake_every_min = WakeUpTimer;
+                    //     LOG_NOTICE("ESP", "Send to Attiny a new timer=" << sett.wake_every_min);
+                    //     masterI2C.sendTimer(sett.wake_every_min);
+                    // }
+                }
 #endif
 
 #ifdef SEND_BLYNK
+                if (strlen(sett.key) > 2 && send_blynk(sett, data, cdata))
+                {
+                    LOG_NOTICE("BLK", "send ok");
+                }
+#endif
+
+#ifdef SEND_COAP
+                if (send_coap(sett, data, cdata))
+                {
+                    LOG_NOTICE("CAP", "send CoAP ok");
+                }else LOG_ERROR("CAP", "Send CoAP data failed");
+#endif
+            }
+            disconnect_wl();
+#endif
+#if defined(NBIOT) 
+            data.voltage = vcc.readVCC();
+            LOG_NOTICE("PWR", "Power (mV): " << data.voltage);
+#if defined(SEND_COAP)  
+            if (send_coap(sett, data, cdata))
+            {
+                LOG_NOTICE("CAP", "send coap ok");
+            }else LOG_ERROR("CAP", "Send coap data failed");
+#endif
+#if defined(SEND_BLYNK)
             if (strlen(sett.key) > 2 && send_blynk(sett, data, cdata))
             {
                 LOG_NOTICE("BLK", "send ok");
             }
 #endif
-
-#ifdef SEND_COAP
-            if (send_coap(sett, data, cdata))
-            {
-                LOG_NOTICE("CAP", "send CoAP ok");
-            }else LOG_ERROR("CAP", "Send CoAP data failed");
 #endif
+        }else{
+            LOG_ERROR(F("ESP"), F("Low power, transfer data prohibited"));
+            ledBuiltIn.LEDBlink(5);
         }
-        disconnect_wl();
-#endif
-#if defined(NBIOT) 
-        data.voltage = vcc.readVCC();
-        LOG_NOTICE("PWR", "Power (mV): " << vcc.readVCC());
-#if defined(SEND_COAP)  
-        if (send_coap(sett, data, cdata))
-        {
-            LOG_NOTICE("CAP", "send coap ok");
-        }else LOG_ERROR("CAP", "Send coap data failed");
-#endif
-#if defined(SEND_BLYNK)
-        if (strlen(sett.key) > 2 && send_blynk(sett, data, cdata))
-        {
-            LOG_NOTICE("BLK", "send ok");
-        }
-#endif
-#endif
 #ifdef USE_EXT_VCC
         LOG_NOTICE("ESP", "Disable additional power supply");
         vcc.extVCCOff();

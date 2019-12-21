@@ -13,7 +13,7 @@
 #include <ulp_macro.c>
 
 /*
-Set #define CONFIG_ULP_COPROC_RESERVE_MEM 1024
+Set #define CONFIG_ULP_COPROC_RESERVE_MEM 1280
 in sdkconfig.h
 */
 
@@ -69,6 +69,34 @@ RTC_MEM_FLAG
   I_BGE(4, 1), \
     BIT_DIS(addr, bit_mask)
 
+//   3 2 | 1 0  |
+//  -----|------|----|
+//   0 0 | 1 1  | 1  |
+//   1 1 | 0 0  | 1  |
+// Using R0, R1
+#define REG_CHK(reg_dest, imm) \
+  I_MOVI(R1, imm), \
+  I_LD(R1, R1, 0), \
+  I_ANDI(R1, R1, 0xF), \
+  I_SUBI(R0, R1, 12), \
+  I_BL(4,1), \
+  I_SUBI(R0, R1, 3), \
+  I_BL(2,1), \
+  I_BGE(2,0), \
+  I_ADDI(reg_dest, reg_dest, 1)
+
+/*
+If R0 > 0 set 1 to reg_dest using bit mask 
+Using R0, R1
+*/
+#define REG_BIT_SET(addr_reg, bit_mask) \
+  I_BGE(7, 1), \
+    I_MOVI(R0, addr_reg), \
+    BIT_DIS(R0, bit_mask), \
+    I_MOVI(R2, 0), \
+    I_BGE(5, 1), \
+  I_MOVI(R0, addr_reg), \
+  BIT_EN(R0, bit_mask)
 
 /*
 #define RTC_MEM_ADC_CH0_RAW       0x700
@@ -237,7 +265,62 @@ void ulp_init(const Button *btnSetup, const Counter *Counter_0, const Counter *C
         I_WR_REG_BIT(rtc_gpio_desc[Counter_1->_pin].reg, rtc_gpio_desc2[Counter_1->_pin].pullup, 0),    // Pull-Up Disable
         I_WR_REG_BIT(rtc_gpio_desc[Counter_1->_pin].reg, rtc_gpio_desc2[Counter_1->_pin].pulldown, 1),  // Pull-Down Enable
 
-        I_IS_IMPULS(R1, RTC_MEM_ADC_CH1_RAW, BIT1), // FIXME: set BIT1 instead of BIT31
+        I_IS_IMPULS(R1, RTC_MEM_ADC_CH1_RAW, BIT1),
+
+
+        // Source power Enable
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (uint32_t)rtc_gpio_desc[GPIO_NUM_4].rtc_num, 1), // rtc_gpio_set_level(GPIO_NUM_4, HIGH);
+        
+        //GPIO34 Water Sensor 0
+        I_CLEAR_R(),
+        I_RD_REG(RTC_GPIO_IN_REG,RTCIO_GPIO34_CHANNEL+14, RTCIO_GPIO34_CHANNEL+14),   // R0 <- GPIO34
+        I_MOVI(R3, RTC_MEM_WS_0_RAW),     // R3 <- @RTC_MEM_WS_0_RAW
+        I_LD(R1, R3, 0),                  // R1 < RTC_MEM_WS_0_RAW
+        I_LSHI(R1, R1, 1),                // R1 = R1 << 1
+        I_ST(R1, R3, 0),                  // R1 -> RTC_MEM_WS_0_RAW
+        BIT_ST(R3, BIT0),                 // R0 -> RTC_MEM_WS_0_RAW[0]
+        REG_CHK(R2, RTC_MEM_WS_0_RAW),
+        I_MOVR(R0, R2),
+        REG_BIT_SET(RTC_MEM_FLAG, BIT2), 
+
+        //GPIO34 Water Sensor 1
+        I_CLEAR_R(),
+        I_RD_REG(RTC_GPIO_IN_REG,RTCIO_GPIO35_CHANNEL+14, RTCIO_GPIO35_CHANNEL+14),   // R0 <- GPIO35
+        I_MOVI(R3, RTC_MEM_WS_1_RAW),     // R3 <- @RTC_MEM_WS_1_RAW
+        I_LD(R1, R3, 0),                  // R1 < RTC_MEM_WS_1_RAW
+        I_LSHI(R1, R1, 1),                // R1 = R1 << 1
+        I_ST(R1, R3, 0),                  // R1 -> RTC_MEM_WS_1_RAW
+        BIT_ST(R3, BIT0),                 // R0 -> RTC_MEM_WS_1_RAW[0]
+        REG_CHK(R2, RTC_MEM_WS_1_RAW),
+        I_MOVR(R0, R2),
+        REG_BIT_SET(RTC_MEM_FLAG, BIT3), 
+
+        //GPIO34 Water Sensor 2
+        I_CLEAR_R(),
+        I_RD_REG(RTC_GPIO_IN_REG,RTCIO_GPIO36_CHANNEL+14, RTCIO_GPIO36_CHANNEL+14),   // R0 <- GPIO36
+        I_MOVI(R3, RTC_MEM_WS_2_RAW),     // R3 <- @RTC_MEM_WS_2_RAW
+        I_LD(R1, R3, 0),                  // R1 < RTC_MEM_WS_2_RAW
+        I_LSHI(R1, R1, 1),                // R1 = R1 << 1
+        I_ST(R1, R3, 0),                  // R1 -> RTC_MEM_WS_2_RAW
+        BIT_ST(R3, BIT0),                 // R0 -> RTC_MEM_WS_2_RAW[0]
+        REG_CHK(R2, RTC_MEM_WS_2_RAW),
+        I_MOVR(R0, R2),
+        REG_BIT_SET(RTC_MEM_FLAG, BIT4), 
+
+        //GPIO34 Water Sensor 3
+        I_CLEAR_R(),
+        I_RD_REG(RTC_GPIO_IN_REG,RTCIO_GPIO39_CHANNEL+14, RTCIO_GPIO39_CHANNEL+14),   // R0 <- GPIO39
+        I_MOVI(R3, RTC_MEM_WS_3_RAW),     // R3 <- @RTC_MEM_WS_3_RAW
+        I_LD(R1, R3, 0),                  // R1 < RTC_MEM_WS_3_RAW
+        I_LSHI(R1, R1, 1),                // R1 = R1 << 1
+        I_ST(R1, R3, 0),                  // R1 -> RTC_MEM_WS_3_RAW
+        BIT_ST(R3, BIT0),                 // R0 -> RTC_MEM_WS_3_RAW[0]
+        REG_CHK(R2, RTC_MEM_WS_3_RAW),
+        I_MOVR(R0, R2),
+        REG_BIT_SET(RTC_MEM_FLAG, BIT5),
+
+        // Source power Disable
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (uint32_t)rtc_gpio_desc[GPIO_NUM_4].rtc_num, 1), // rtc_gpio_set_level(GPIO_NUM_4, LOW);
 
         //SETUP BUTTON HANDLER
         M_LABEL(300),
@@ -264,6 +347,8 @@ void ulp_init(const Button *btnSetup, const Counter *Counter_0, const Counter *C
         M_LABEL(8),
             I_RD_REG(RTC_CNTL_LOW_POWER_ST_REG, RTC_CNTL_RDY_FOR_WAKEUP_S, RTC_CNTL_RDY_FOR_WAKEUP_S),
             M_BXZ(8),
+        I_MOVI(R0, RTC_MEM_FLAG_CP),    // R0 <- @RTC_MEM_FLAG_CP
+        I_ST(R1, R0, 0),                // RTC_MEM_FLAG -> RTC_MEM_FLAG_CP
         I_WAKE(),
 
         M_LABEL(9),
